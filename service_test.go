@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	patronhttp "github.com/beatlabs/patron/component/http"
+	v2 "github.com/beatlabs/patron/component/http/v2"
 	"github.com/beatlabs/patron/log"
 	"github.com/beatlabs/patron/log/std"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,8 @@ func TestNewServer(t *testing.T) {
 		"ready check func provided was nil\n" +
 		"provided components slice was empty\n" +
 		"provided SIGHUP handler was nil\n" +
-		"provided uncompressed paths slice was empty\n"
+		"provided uncompressed paths slice was empty\n" +
+		"provided HTTP v2 component is nil\n"
 
 	tests := map[string]struct {
 		fields            map[string]interface{}
@@ -44,6 +46,7 @@ func TestNewServer(t *testing.T) {
 		rcf               patronhttp.ReadyCheckFunc
 		sighupHandler     func()
 		uncompressedPaths []string
+		httpV2Component   *v2.Component
 		wantErr           string
 	}{
 		"success": {
@@ -55,6 +58,7 @@ func TestNewServer(t *testing.T) {
 			rcf:               patronhttp.DefaultReadyCheck,
 			sighupHandler:     func() { log.Info("SIGHUP received: nothing setup") },
 			uncompressedPaths: []string{"/foo", "/bar"},
+			httpV2Component:   &v2.Component{},
 			wantErr:           "",
 		},
 		"nil inputs steps": {
@@ -91,6 +95,7 @@ func TestNewServer(t *testing.T) {
 				WithComponents(tt.cps...).
 				WithSIGHUP(tt.sighupHandler).
 				WithUncompressedPaths(tt.uncompressedPaths...).
+				WithHTTPv2(tt.httpV2Component).
 				build()
 
 			if tt.wantErr != "" {

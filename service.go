@@ -20,7 +20,7 @@ import (
 	patronzerolog "github.com/beatlabs/patron/log/zerolog"
 	"github.com/beatlabs/patron/trace"
 	"github.com/gorilla/mux"
-	jaeger "github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go"
 )
 
 const (
@@ -95,7 +95,7 @@ func (s *service) createHTTPComponent() (Component, error) {
 			return nil, fmt.Errorf("env var for HTTP default port is not valid: %w", err)
 		}
 	}
-	log.Debugf("creating default HTTP component at port %", portVal)
+	log.Debugf("creating default HTTP component at port %d", portVal)
 
 	readTimeout, err := getHTTPReadTimeout()
 	if err != nil {
@@ -229,6 +229,9 @@ func (s *service) createHTTPv2(port int, readTimeout, writeTimeout *time.Duratio
 	if s.uncompressedPaths != nil {
 		oo = append(oo, v2.UncompressedPaths(s.uncompressedPaths...))
 	}
+
+	cfg, _ := os.LookupEnv("PATRON_HTTP_STATUS_ERROR_LOGGING")
+	oo = append(oo, v2.StatusCodeLoggerConfig(cfg))
 
 	return v2.New(s.httpRouter, oo...)
 }

@@ -22,6 +22,7 @@ import (
 const (
 	kafkaHost            = "localhost"
 	kafkaPort            = "9092"
+	wrongKafkaPort       = "9032"
 	zookeeperPort        = "2181"
 	simpleTopic1         = "simpleTopic1"
 	simpleTopic2         = "simpleTopic2"
@@ -32,6 +33,7 @@ const (
 	groupTopic2          = "groupTopic2"
 	successTopic1        = "successTopic1"
 	successTopic2        = "successTopic2"
+	successTopic3        = "successTopic3"
 	failAllRetriesTopic1 = "failAllRetriesTopic1"
 	failAllRetriesTopic2 = "failAllRetriesTopic2"
 	failAndRetryTopic1   = "failAndRetryTopic1"
@@ -53,6 +55,7 @@ func TestMain(m *testing.M) {
 		getTopic(failAndRetryTopic2),
 		getTopic(successTopic1),
 		getTopic(successTopic2),
+		getTopic(successTopic3),
 	}
 	k, err := create(120*time.Second, topics...)
 	if err != nil {
@@ -91,10 +94,10 @@ func create(expiration time.Duration, topics ...string) (*kafkaRuntime, error) {
 }
 
 func (k *kafkaRuntime) setup() error {
-
 	var err error
 
-	runOptions := &dockertest.RunOptions{Repository: "wurstmeister/zookeeper",
+	runOptions := &dockertest.RunOptions{
+		Repository: "wurstmeister/zookeeper",
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			docker.Port(fmt.Sprintf("%s/tcp", zookeeperPort)): {{HostIP: "", HostPort: zookeeperPort}},
 			// port 22 is too generic to be used for the test
@@ -124,7 +127,8 @@ func (k *kafkaRuntime) setup() error {
 			"KAFKA_ADVERTISED_HOST_NAME=127.0.0.1",
 			fmt.Sprintf("KAFKA_CREATE_TOPICS=%s", strings.Join(k.topics, ",")),
 			fmt.Sprintf("KAFKA_ZOOKEEPER_CONNECT=%s:%s", ip, zookeeperPort),
-		}}
+		},
+	}
 
 	_, err = k.RunWithOptions(runOptions)
 	if err != nil {
@@ -193,7 +197,6 @@ func getTopic(name string) string {
 }
 
 func consumeMessages(consumer async.Consumer, expectedMessageCount int) ([]string, error) {
-
 	ctx, cnl := context.WithCancel(context.Background())
 	defer cnl()
 

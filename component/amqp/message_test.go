@@ -101,7 +101,7 @@ func Test_message_ACK(t *testing.T) {
 }
 
 func Test_message_NACK(t *testing.T) {
-	t.Parallel()
+	t.Cleanup(func() { mockTracer.Reset() })
 	type fields struct {
 		acknowledger amqp.Acknowledger
 	}
@@ -120,7 +120,7 @@ func Test_message_NACK(t *testing.T) {
 	for name, tt := range tests {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			t.Cleanup(func() { mockTracer.Reset() })
 			m := createMessage("1", tt.fields.acknowledger)
 			err := m.NACK()
 
@@ -134,7 +134,6 @@ func Test_message_NACK(t *testing.T) {
 					"correlationID": "123",
 				}
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-				mockTracer.Reset()
 			} else {
 				assert.NoError(t, err)
 				expected := map[string]interface{}{
@@ -145,7 +144,6 @@ func Test_message_NACK(t *testing.T) {
 					"correlationID": "123",
 				}
 				assert.Equal(t, expected, mockTracer.FinishedSpans()[0].Tags())
-				mockTracer.Reset()
 			}
 		})
 	}
